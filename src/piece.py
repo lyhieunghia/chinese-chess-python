@@ -21,6 +21,7 @@ class Piece:
     def __str__(self):
         return f"{self.piece_type}({self.x}, {self.y}, {self.player.color})"
 
+# XE
 class Chariot(Piece):
     def __init__(self, x, y, player):
         super().__init__(x, y, player, "chariot")
@@ -29,20 +30,31 @@ class Chariot(Piece):
         if final_x != self.x and final_y != self.y:
             return False  # Xe chỉ đi thẳng ngang hoặc dọc
         
-        # Kiểm tra có quân cản đường không
+        # Kiểm tra có quân cản đường không trên hướng đi không
+        # đi thẳng
         if final_x == self.x:
             step = 1 if final_y > self.y else -1
             for y in range(self.y + step, final_y, step):
                 if board.get_piece(self.x, y):
                     return False
+        # đi ngang        
         else:
             step = 1 if final_x > self.x else -1
             for x in range(self.x + step, final_x, step):
                 if board.get_piece(x, self.y):
                     return False
         
-        return True
-
+        #return True
+        target_piece = board.get_piece(final_x, final_y)
+        # nếu mà điểm đícch có tồn tại quân cờ
+        if target_piece:
+            # nếu quân đó khác màu thì True ngược lại thì False
+            return target_piece.player.color != self.player.color
+        # nếu không tồn tại
+        else:
+            return True
+        
+# PHÁO
 class Cannon(Piece):
     def __init__(self, x, y, player):
         super().__init__(x, y, player, "cannon")
@@ -69,6 +81,7 @@ class Cannon(Piece):
             return count == 1 and target_piece.player.color != self.player.color
         return count == 0
 
+# TƯỚNG
 class General(Piece):
     def __init__(self, x, y, player):
         super().__init__(x, y, player, "general")
@@ -78,6 +91,7 @@ class General(Piece):
             return False  # Chỉ đi trong cung
         return abs(final_x - self.x) + abs(final_y - self.y) == 1
 
+# SĨ
 class Advisor(Piece):
     def __init__(self, x, y, player):
         super().__init__(x, y, player, "advisor")
@@ -85,8 +99,31 @@ class Advisor(Piece):
     def is_valid_move(self, final_x, final_y, board):
         if not (3 <= final_x <= 5 and (0 <= final_y <= 2 if self.player.color == self.RED else 7 <= final_y <= 9)):
             return False  # Chỉ đi trong cung
-        return abs(final_x - self.x) == 1 and abs(final_y - self.y) == 1
+        
+        # kiểm tra delta(x, y): giá trị thay đổi của biến (x, y) 
+        # giữa self(x, y) và final(x, y)
+        delta_x = abs(final_x - self.x)
+        delta_y = abs(final_y - self.y)
 
+        # kiểm tra xem nếu delta_x/y == 1
+        if(delta_x == delta_y == 1):
+            # kiểm tra xem điểm đích có quân cờ không
+            target_piece = board.get_piece(final_x, final_y)
+
+            # nếu mà điểm đích có tồn tại quân cờ
+            if target_piece:
+                # nếu quân đó khác màu thì True ngược lại thì False
+                return target_piece.player.color != self.player.color
+            # nếu không tồn tại
+            else:
+                return True
+        # nếu sai giá trị delta
+        else:
+            return False
+
+        #return abs(final_x - self.x) == 1 and abs(final_y - self.y) == 1
+
+# TỐT
 class Soldier(Piece):
     def __init__(self, x, y, player):
         super().__init__(x, y, player, "soldier")
@@ -103,6 +140,7 @@ class Soldier(Piece):
             else:
                 return (final_x == self.x and final_y == self.y - 1) or (abs(final_x - self.x) == 1 and final_y == self.y)
 
+# MÃ
 class Horse(Piece):
     def __init__(self, x, y, player):
         super().__init__(x, y, player, "horse")
@@ -120,6 +158,7 @@ class Horse(Piece):
         
         return True
 
+# TƯỢNG
 class Elephant(Piece):
     def __init__(self, x, y, player):
         super().__init__(x, y, player, "elephant")
