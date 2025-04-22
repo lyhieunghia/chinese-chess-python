@@ -174,17 +174,23 @@ class Soldier(Piece):
         super().__init__(x, y, player, "soldier")
 
     def is_valid_move(self, final_x: int, final_y: int, board) -> bool:
-        if self.player.color == self.RED:
-            if self.y <= 4:  # Trước khi qua sông chỉ đi thẳng
-                return final_x == self.x and final_y == self.y + 1
-            else:
-                return (final_x == self.x and final_y == self.y + 1) or (abs(final_x - self.x) == 1 and final_y == self.y)
-        else:
-            if self.y >= 5:  # Trước khi qua sông chỉ đi thẳng
-                return final_x == self.x and final_y == self.y - 1
-            else:
-                return (final_x == self.x and final_y == self.y - 1) or (abs(final_x - self.x) == 1 and final_y == self.y)
+        # Kiểm tra cùng màu
+        target_piece = board.get_piece(final_x, final_y)
+        if target_piece and target_piece.player.color == self.player.color:
+            return False
 
+        if self.player.color == self.RED:
+            if self.x <= 4:  # Trước khi qua sông chỉ đi thẳng
+                return final_x == self.x + 1 and final_y == self.y
+            else:  # Sau khi qua sông có thể đi ngang
+                return (final_x == self.x + 1 and final_y == self.y) or \
+                       (final_x == self.x and abs(final_y - self.y) == 1)
+        else:
+            if self.x >= 5:  # Trước khi qua sông chỉ đi thẳng
+                return final_x == self.x - 1 and final_y == self.y
+            else:
+                return (final_x == self.x - 1 and final_y == self.y) or \
+                       (final_x == self.x and abs(final_y - self.y) == 1)
 # MÃ
 class Horse(Piece):
     def __init__(self, x, y, player):
@@ -193,16 +199,23 @@ class Horse(Piece):
     def is_valid_move(self, final_x: int, final_y: int, board) -> bool:
         dx = abs(final_x - self.x)
         dy = abs(final_y - self.y)
+
+        # Kiểu di chuyển hợp lệ
         if (dx, dy) not in [(2, 1), (1, 2)]:
             return False
-        
+
+        # Kiểm tra cản chân (chân ngựa)
         if dx == 2 and board.get_piece((self.x + final_x) // 2, self.y):
             return False
         if dy == 2 and board.get_piece(self.x, (self.y + final_y) // 2):
             return False
-        
-        return True
 
+        # Kiểm tra quân cùng màu
+        target_piece = board.get_piece(final_x, final_y)
+        if target_piece and target_piece.player.color == self.player.color:
+            return False
+
+        return True
 # TƯỢNG
 class Elephant(Piece):
     def __init__(self, x, y, player):
@@ -211,17 +224,26 @@ class Elephant(Piece):
     def is_valid_move(self, final_x: int, final_y: int, board) -> bool:
         dx = abs(final_x - self.x)
         dy = abs(final_y - self.y)
+
+        # Di chuyển đúng kiểu 2x2
         if (dx, dy) != (2, 2):
             return False
-        
+
+        # Không được vượt sông
+        if self.player.color == self.RED and final_x > 4:
+            return False
+        if self.player.color == self.BLACK and final_x < 5:
+            return False
+
+        # Không có quân chắn giữa
         mid_x = (self.x + final_x) // 2
         mid_y = (self.y + final_y) // 2
         if board.get_piece(mid_x, mid_y):
             return False
-        
-        if self.player.color == self.RED and final_y > 4:
+
+        # Kiểm tra quân cùng màu tại đích
+        target_piece = board.get_piece(final_x, final_y)
+        if target_piece and target_piece.player.color == self.player.color:
             return False
-        if self.player.color == self.BLACK and final_y < 5:
-            return False
-        
+
         return True
