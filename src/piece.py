@@ -1,3 +1,10 @@
+#################!!!##################
+#           LƯU Ý
+# 1. GỐC TỌA ĐỘ BÀN CỜ NẰM Ở BÊN GSC TRÁI 
+# PHÍA TRÊN.
+# 2.TRỤC X NẰM DỌC, TRỤC Y NẰM NGANG
+#################!!!##################
+
 class Piece:
     RED = "red"
     BLACK = "black"
@@ -87,9 +94,47 @@ class General(Piece):
         super().__init__(x, y, player, "general")
 
     def is_valid_move(self, final_x, final_y, board):
-        if not (3 <= final_x <= 5 and (0 <= final_y <= 2 if self.player.color == self.RED else 7 <= final_y <= 9)):
+        if not (3 <= final_y <= 5 and (0 <= final_x <= 2 if self.player.color == self.RED else 7 <= final_x <= 9)):
             return False  # Chỉ đi trong cung
-        return abs(final_x - self.x) + abs(final_y - self.y) == 1
+        
+        # kiểm tra delta(x, y): giá trị thay đổi của biến (x, y) 
+        # giữa self(x, y) và final(x, y)
+        delta_x = abs(final_x - self.x)
+        delta_y = abs(final_y - self.y)
+
+        # Kiểm tra đi chéo nếu ở trung tâm cung
+        center_x = 1 if self.player.color == self.RED else 8
+        center_y = 4
+
+        # kiểm tra xem điểm đích có quân cờ không
+        target_piece = board.get_piece(final_x, final_y)
+        
+        # tướng sẽ có thêm khả năng đi chéo khi ở trung tâm
+        # nếu tướng đỏ hoặc đen ở trung tâm
+        if(self.x == center_x and self.y == center_y):
+           # kiểm tra xem nếu delta_x/y == 1
+            if(delta_x == 1 and delta_y == 1):
+                # nếu mà điểm đích có tồn tại quân cờ
+                if target_piece:
+                # nếu quân đó khác màu thì True ngược lại thì False
+                    return target_piece.player.color != self.player.color
+                # nếu không tồn tại
+                else:
+                    return True
+            # không đặt dòng này vì tướng vẫn có thể đi thẳng, dọc khi đứng ở trung tâm
+            # và để cho xét tiếp điều kiên if() ở dưới
+            # nếu sai giá trị delta
+            # else:
+            #    return False  
+
+        # Kiểm tra đi ngang hoặc dọc 1 bước
+        if (delta_x == 1 and delta_y == 0) or (delta_x == 0 and delta_y == 1):
+            # 1.nếu không có quân cờ ở đích đến thì đi
+            # 2.nếu có quân cờ thì chỉ đi khi nó khác màu(bắt quân)
+            #  cách này là viết gọn của cách phía trên
+            return (not target_piece) or target_piece.player.color != self.player.color
+
+        return False          
 
 # SĨ
 class Advisor(Piece):
@@ -97,7 +142,7 @@ class Advisor(Piece):
         super().__init__(x, y, player, "advisor")
 
     def is_valid_move(self, final_x, final_y, board):
-        if not (3 <= final_x <= 5 and (0 <= final_y <= 2 if self.player.color == self.RED else 7 <= final_y <= 9)):
+        if not (3 <= final_y <= 5 and (0 <= final_x <= 2 if self.player.color == self.RED else 7 <= final_x <= 9)):
             return False  # Chỉ đi trong cung
         
         # kiểm tra delta(x, y): giá trị thay đổi của biến (x, y) 
@@ -106,7 +151,7 @@ class Advisor(Piece):
         delta_y = abs(final_y - self.y)
 
         # kiểm tra xem nếu delta_x/y == 1
-        if(delta_x == delta_y == 1):
+        if(delta_x == 1 and delta_y == 1):
             # kiểm tra xem điểm đích có quân cờ không
             target_piece = board.get_piece(final_x, final_y)
 
