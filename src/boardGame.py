@@ -10,6 +10,7 @@ class BoardGame:
         self.black_pieces = []
         self.board_array = [[None for _ in range(9)] for _ in range(10)]
         self.set_pieces()
+        self.is_flip = True
 
         # Thiết lập kích thước ô và vị trí bàn cờ trên màn hình
         self.dot_size = 16
@@ -124,6 +125,9 @@ class BoardGame:
         """Chuyển đổi tọa độ pixel sang vị trí bàn cờ (hàng, cột)."""
         col = (pos[0] - self.offset_x) // self.cell_size
         row = (pos[1] - self.offset_y) // self.cell_size
+        if self.is_flip:
+            col = 8 - col
+            row = 9 - row
         return (row, col) if 0 <= row < 10 and 0 <= col < 9 else None
 
     def get_piece(self, row, col):
@@ -173,8 +177,13 @@ class BoardGame:
     def draw(self):
         self.draw_board()
         self.draw_pieces()
+
         if self.selected_piece:
             self.highlight_possible_move(self.selected_piece)
+
+        highlight_piece = self.dragging_piece or self.selected_piece
+        if highlight_piece:
+            self.draw_piece(highlight_piece, True)
 
 
     def draw_board(self):
@@ -227,9 +236,6 @@ class BoardGame:
                 piece = self.board_array[row][col]
                 if piece and piece != self.dragging_piece:
                     self.draw_piece(piece, False)
-        highlight_piece = self.dragging_piece or self.selected_piece
-        if highlight_piece:
-            self.draw_piece(highlight_piece, True)
 
 
     def draw_piece(self, piece, is_highlight):
@@ -239,8 +245,11 @@ class BoardGame:
             x = mouse_x - self.drag_offset[0]
             y = mouse_y - self.drag_offset[1]
         else:
-            x = self.offset_x + piece.y * self.cell_size + (self.cell_size - self.piece_size) // 2
-            y = self.offset_y + piece.x * self.cell_size + (self.cell_size - self.piece_size) // 2
+            col = 8 - piece.y if self.is_flip else piece.y
+            row = 9 - piece.x if self.is_flip else piece.x
+
+            x = self.offset_x + col * self.cell_size + (self.cell_size - self.piece_size) // 2
+            y = self.offset_y + row * self.cell_size + (self.cell_size - self.piece_size) // 2
 
         piece_image = self.piece_images.get(f"{piece.piece_type}_{piece.player.color}")
         if piece_image:
@@ -280,6 +289,9 @@ class BoardGame:
                         self.draw_highlight_dot(row, col)
 
     def draw_highlight_dot(self, row, col):
+        row = 9 - row if self.is_flip else row
+        col = 8 - col if self.is_flip else col
+
         x = self.offset_x + col * self.cell_size + self.cell_size // 2
         y = self.offset_y + row * self.cell_size + self.cell_size // 2
 
@@ -307,8 +319,10 @@ class BoardGame:
                     self.selected_piece = piece
                     self.dragging_piece = piece
 
-                    px = self.offset_x + piece.y * self.cell_size
-                    py = self.offset_y + piece.x * self.cell_size
+                    row = 9 - piece.x if self.is_flip else piece.x
+                    col = 8 - piece.y if self.is_flip else piece.y
+                    px = self.offset_x + col * self.cell_size
+                    py = self.offset_y + row * self.cell_size
                     self.drag_offset = (mouse_pos[0] - px, mouse_pos[1] - py)
 
     def handle_mouse_up(self, event):
@@ -327,10 +341,6 @@ class BoardGame:
         self.drag_offset = (0, 0)
         self.dragging_piece = None
 
-    def handle_mouse_motion(self):
-        if self.dragging_piece:
-            self.dragging_pos = pygame.mouse.get_pos()
-
     def reset_game(self):
         """Đặt lại toàn bộ bàn cờ và quân cờ như lúc bắt đầu trò chơi."""
         # Xóa dữ liệu cũ
@@ -340,3 +350,6 @@ class BoardGame:
         
         # Thiết lập lại các quân cờ
         self.set_pieces()
+
+    def flip_board(self):
+        self.is_flip = False if self.is_flip else True

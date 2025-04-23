@@ -1,5 +1,7 @@
 import pygame
 import math
+
+import gui
 from boardGame import BoardGame
 from player import Player
 
@@ -26,13 +28,18 @@ class Game:
     def switch_turn(self):
         """Chuyển lượt chơi giữa hai người chơi"""
         self.turn = self.player1 if self.turn == self.player2 else self.player2
-        print('switch turn')
+
+        if self.board.is_checkmate(self.turn):
+            self.gameover = True
+    
+    def get_opponent(self):
+        return self.player1 if self.turn == self.player2 else self.player2
 
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-            elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP):
+            elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
                 self.board.handle_mouse_event(event)
 
     def run(self):
@@ -42,6 +49,9 @@ class Game:
             
             self.handle_events()
             self.board.draw()
+            if self.gameover:
+                gui.show_gameover(self.screen, self.get_opponent().color)
+
             pygame.display.flip()
 
         pygame.quit()
