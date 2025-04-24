@@ -348,6 +348,10 @@ class BoardGame:
         self.black_pieces.clear()
         self.board_array = [[None for _ in range(9)] for _ in range(10)]
         
+        # Xóa quân cờ đang chọn vì nếu có quân được chọn khi nhấn reset thì quân đó
+        # sẽ không bị làm mới theo bàn cờ => trở thành quân cờ ma
+        self.selected_piece = None
+
         # Thiết lập lại các quân cờ
         self.set_pieces()
 
