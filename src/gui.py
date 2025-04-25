@@ -37,6 +37,7 @@ class Button:
         return False
     
 
+# hàm để show ra màn hình kết thúc game
 def show_gameover(screen, winner_color, reset_callback):
     font = pygame.font.SysFont(None, 48)
     small_font = pygame.font.SysFont(None, 32)
@@ -95,4 +96,82 @@ def show_gameover(screen, winner_color, reset_callback):
         screen.blit(quit_text, quit_text_rect)
 
         pygame.display.flip()
+        clock.tick(60)
+
+
+# hàm để show menu 
+def show_main_menu(screen):
+    # font dùng cho tiêu đề 
+    font = pygame.font.SysFont(None, 64)
+    # font dùng cho chữ trên các nút
+    small_font = pygame.font.SysFont(None, 36)
+
+    # lấy kích thước cửa sổ
+    width, height = screen.get_size()
+
+    # Load ảnh nền 
+    background = pygame.image.load("./assets/images/cotuongtieude.jpg")
+    # chỉnh kích thước ảnh
+    background = pygame.transform.scale(background, (width, height))
+
+    # đoạn này phòng hờ nếu không tải ảnh được
+    # hiển thị tiêu đề lên màn hình
+    title = font.render("CỜ TƯỚNG", True, (200, 0, 0))
+    # canh giữa tiêu đề
+    title_rect = title.get_rect(center=(width // 2, height // 3))
+
+
+    # kích thước nút và khoảng cách giữa chúng
+    button_width = 200
+    button_height = 60
+    spacing = 40
+
+    # tạo khung cho hai nút chơi game và thoát game
+    play_rect = pygame.Rect((width - button_width) // 2, height // 2, button_width, button_height)
+    quit_rect = pygame.Rect((width - button_width) // 2, height // 2 + button_height + spacing, button_width, button_height)
+
+    # điều chỉnh phông chữ cho nút
+    play_text = small_font.render("Play", True, (0, 0, 0))
+    quit_text = small_font.render("Quit", True, (0, 0, 0))
+
+    # canh chữ ở giữa
+    play_text_rect = play_text.get_rect(center=play_rect.center)
+    quit_text_rect = quit_text.get_rect(center=quit_rect.center)
+
+    clock = pygame.time.Clock()
+
+    while True:
+        # vẽ màu của nền
+        #screen.fill((255, 255, 255))
+        # vẽ tiêu đề 
+        #screen.blit(title, title_rect)
+
+        # vẽ ảnh nền
+        screen.blit(background, (0, 0))
+
+        # vẽ các nút 
+        pygame.draw.rect(screen, (220, 220, 220), play_rect, border_radius=10)
+        pygame.draw.rect(screen, (0, 0, 0), play_rect, 2, border_radius=10)
+        screen.blit(play_text, play_text_rect)
+
+        pygame.draw.rect(screen, (220, 220, 220), quit_rect, border_radius=10)
+        pygame.draw.rect(screen, (0, 0, 0), quit_rect, 2, border_radius=10)
+        screen.blit(quit_text, quit_text_rect)
+
+        # làm mới màn hình
+        pygame.display.flip()
+
+        # xử lý sự kiện
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if play_rect.collidepoint(event.pos):
+                    return  # kết thúc menu và vào game
+                elif quit_rect.collidepoint(event.pos):
+                    pygame.quit()
+                    sys.exit()
+
+        # cái này giống như là để giới hạn tần suất làm mới khung hình?
         clock.tick(60)

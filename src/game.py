@@ -98,5 +98,8 @@ class Game:
         pygame.quit()
 
 if __name__ == "__main__":
+    # khởi tạo màn hình cho game
+    screen = pygame.display.set_mode((740, 600))
     game = Game()
+    gui.show_main_menu(screen)
     game.run()
