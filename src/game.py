@@ -1,39 +1,12 @@
 import pygame
 import math
-
 import gui
+
+from gui import *
 from boardGame import BoardGame
 from player import Player
 
 pygame.init()
-
-# Lớp nút đơn giản
-class Button:
-    # x: tọa độ ngang( vị trí )
-    # y: tọa độ dọc
-    # w: chiều ngang nút
-    # h: chiều dọc nút
-    # text: chữ hiện trên nút
-    # callback: hàm được gọi để xử lý sự kiện
-    def __init__(self, x, y, w, h, text, callback):
-        self.rect = pygame.Rect(x, y, w, h)
-        self.text = text
-        self.color = (200, 200, 200)
-        self.callback = callback
-        self.font = pygame.font.SysFont(None, 28)
-
-    def draw(self, surface):
-        pygame.draw.rect(surface, self.color, self.rect, border_radius=6)
-        text_surface = self.font.render(self.text, True, (0, 0, 0))
-        text_rect = text_surface.get_rect(center=self.rect.center)
-        surface.blit(text_surface, text_rect)
-
-    def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.rect.collidepoint(event.pos):
-                self.callback()
-                return True
-        return False
 
 class Game:
     def __init__(self):
@@ -73,12 +46,18 @@ class Game:
         self.turn = self.player1 if self.turn == self.player2 else self.player2
 
         print(self.turn.color)
-        if self.board.is_in_check(self.turn.color):
-            print(f"{self.turn.color} đang bị chiếu!")
+        # if self.board.is_in_check(self.turn.color):
+        if self.board.is_in_check(self.player1.color):
+            print(f"{self.player1.color} đang bị chiếu!")
             if self.board.is_checkmate(self.turn):
-                print(f"{self.turn.color} bị chiếu bí!")
+                print(f"{self.player1.color} bị chiếu bí!")
                 self.gameover = True
-
+        elif self.board.is_in_check(self.player2.color):
+            print(f"{self.player2.color} đang bị chiếu!")
+            if self.board.is_checkmate(self.turn):
+                print(f"{self.player2.color} bị chiếu bí!")
+                self.gameover = True
+                
 
     def get_opponent(self):
         return self.player1 if self.turn == self.player2 else self.player2
@@ -95,6 +74,8 @@ class Game:
                         return
                 self.board.handle_mouse_event(event)
 
+    
+
     def run(self):
         while self.running:
             self.screen.fill((255, 255, 255))
@@ -103,7 +84,7 @@ class Game:
             self.board.draw()
 
             if self.gameover:
-                gui.show_gameover(self.screen, self.get_opponent().color)
+                gui.show_gameover(self.screen, self.get_opponent().color, self.board.reset_game)
 
             # Vẽ ảnh lên sidebar
             self.screen.blit(self.sidebar_image, (self.board_width, 0))
