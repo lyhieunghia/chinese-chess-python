@@ -27,7 +27,7 @@ class BoardGame:
         self.BLACK_COLOR = (0, 0, 0)
         self.PIECE_COLOR = (222, 184, 135)
         self.SELECTED_COLOR = (159, 0, 255)
-        self.MOVE_COLOR = (255, 92, 0)
+        self.CHECK_COLOR = (255, 92, 0)
 
         self.board_image = pygame.image.load("./assets/images/brown_board.jpg").convert()
         self.board_image = pygame.transform.scale(self.board_image, (self.board_width, self.board_height))
@@ -54,9 +54,17 @@ class BoardGame:
         }
 
         #Biến kéo thả
-        self.selected_piece = None
+        self.selected_piece: Piece = None
         self.dragging_piece = None
         self.drag_offset = (0,0)
+
+        #Âm thanh
+        self.move_sound = pygame.mixer.Sound("./assets/sounds/move.mp3")
+        self.capture_sound = pygame.mixer.Sound("./assets/sounds/capture.mp3")
+        self.start_sound = pygame.mixer.Sound("./assets/sounds/game_start.mp3")
+        self.end_sound = pygame.mixer.Sound("./assets/sounds/game_end.mp3")
+        self.check_sound = pygame.mixer.Sound("./assets/sounds/check.mp3")
+        self.illegal = pygame.mixer.Sound("./assets/sounds/illegal.mp3")
         
 
     def set_pieces(self):
@@ -190,14 +198,19 @@ class BoardGame:
         """Di chuyển quân cờ, xử lý ăn quân nếu có và cập nhật bàn cờ."""
         if piece and piece.player == self.game.turn:
             if piece.is_valid_move(final_x, final_y, self):
-                target_piece = self.get_piece(final_x, final_y)
-                if target_piece and target_piece.player.color != piece.player.color:
-                    self.remove_piece(target_piece)
-                # Xóa quân cờ khỏi vị trí cũ và cập nhật vị trí mới
-                self.board_array[piece.x][piece.y] = None
-                piece.move(final_x, final_y, self)
-                self.board_array[final_x][final_y] = piece
-                return True
+                if self.is_legal_move(piece, final_x, final_y):
+                    target_piece = self.get_piece(final_x, final_y)
+                    if target_piece and target_piece.player.color != piece.player.color:
+                        self.remove_piece(target_piece)
+                        self.capture_sound.play()
+                    else:
+                        self.move_sound.play()
+                    # Xóa quân cờ khỏi vị trí cũ và cập nhật vị trí mới
+                    self.board_array[piece.x][piece.y] = None
+                    piece.move(final_x, final_y, self)
+                    self.board_array[final_x][final_y] = piece
+                    return True
+                return False
         return False
 
     def remove_piece(self, piece):
@@ -242,10 +255,8 @@ class BoardGame:
     def is_checkmate(self, player):
         if player.color == "red":
             own_pieces = self.red_pieces
-            enemy_color = "black"
         else:
             own_pieces = self.black_pieces
-            enemy_color = "red"
 
         # Nếu không bị chiếu thì không phải chiếu bí
         if not self.is_in_check(player.color):
@@ -289,6 +300,39 @@ class BoardGame:
         # Không có nước nào giúp thoát chiếu
         return True
 
+    # hàm này để kiểm tra xem nước đi có để hổng quân tướng không
+    # hàm này sẽ kết hợp cùng is_valid_move(...)
+    def is_legal_move(self, piece: Piece, to_row: int, to_col: int):
+        # Giả lập nước đi của một quân cờ, 
+        # kiểm tra xem nước đi đó có khiến tướng bị chiếu không
+
+        # vị trí ban đầu của quân cờ
+        origin_row, origin_col = piece.x, piece.y
+        # lấy quân cờ tại vị trí được giả lập để di chuyển tới
+        captured_piece = self.get_piece(to_row, to_col)
+
+
+        # Tạm thời di chuyển quân đến vị trí muốn thử nghiệm
+        self.board_array[to_row][to_col] = piece
+        # Tạm thời xóa uân tại vị trí cũ
+        self.board_array[origin_row][origin_col] = None
+        # Cập nhật tọa độ mới cho quân cờ được giả lập
+        piece.x, piece.y = to_row, to_col
+
+        # Kiểm tra sau khi di chuyển thì tướng có bị chiếu không.
+        # hàm này trả về True nếu có bị chiếu và False nếu không
+        in_check = self.is_in_check(self.game.turn.color)
+
+        # Hoàn tác di chuyển
+        self.board_array[origin_row][origin_col] = piece
+        self.board_array[to_row][to_col] = captured_piece
+        piece.x, piece.y = origin_row, origin_col
+
+        # trả về not... vì như chú thích ở trên, khi trả về False nghĩa là không bị chiếu
+        # nên đảo ngược lại thành True từ hàm is_legal_move là nước đi có hợp lệ
+        return not in_check
+    
+    
     """
     def is_checkmate(self, player):
         #Kiểm tra nếu tướng của người chơi bị chiếu bí (có quân đối phương có thể di chuyển tới vị trí của tướng).
@@ -376,8 +420,11 @@ class BoardGame:
                     # thì có bị chiếu không?
                     is_check = (
                     piece.piece_type == "general"
-                    and self.is_in_check(self.game.turn.color)
+                    and piece.player == self.game.turn
+                    and self.is_in_check(piece.player.color)
                     )
+                    if is_check:
+                        self.check_sound.play()
                     self.draw_piece(piece, False, is_check)
 
 
@@ -411,7 +458,10 @@ class BoardGame:
         pygame.draw.circle(surface, bg_color, (center, center), center)
 
         # Viền đen ngoài
-        pygame.draw.circle(surface, self.BLACK_COLOR, (center, center), center, 2)
+        if is_check:
+            pygame.draw.circle(surface, self.CHECK_COLOR, (center, center), center, 4)
+        else:
+            pygame.draw.circle(surface, self.BLACK_COLOR, (center, center), center, 2)
 
         # Vẽ icon đã resize vào giữa
         resized_icon = pygame.transform.smoothscale(original_image, (self.piece_icon, self.piece_icon))
@@ -419,49 +469,13 @@ class BoardGame:
         surface.blit(resized_icon, (offset, offset))
 
         
-        #border_color = (169, 21, 21) if color == "red" else (0, 0, 0)
-        if is_check:
-            border_color = (255, 0, 0)
-            border_width = 4
-        else:
-            border_color = (169, 21, 21) if color == "red" else (0, 0, 0)
-            border_width = 2
+        # Vẽ viền nhỏ ở trong
+        border_color = (169, 21, 21) if color == "red" else (0, 0, 0)
+        border_width = 2
 
         pygame.draw.circle(surface, border_color, (center, center), self.piece_icon // 2, border_width)
         return surface
     
-    # hàm này để kiểm tra xem nước đi có bóp dé quân tướng không
-    # hàm này sẽ kết hợp cùng is_valid_move(...)
-    def is_legal_move(self, piece: Piece, to_row: int, to_col: int):
-        # Giả lập nước đi của một quân cờ, 
-        # kiểm tra xem nước đi đó có khiến tướng bị chiếu không
-
-        # vị trí ban đầu của quân cờ
-        origin_row, origin_col = piece.x, piece.y
-        # lấy quân cờ tại vị trí được giả lập để di chuyển tới
-        captured_piece = self.get_piece(to_row, to_col)
-
-
-        # Tạm thời di chuyển quân đến vị trí muốn thử nghiệm
-        self.board_array[to_row][to_col] = piece
-        # Tạm thời xóa uân tại vị trí cũ
-        self.board_array[origin_row][origin_col] = None
-        # Cập nhật tọa độ mới cho quân cờ được giả lập
-        piece.x, piece.y = to_row, to_col
-
-        # Kiểm tra sau khi di chuyển thì tướng có bị chiếu không.
-        # hàm này trả về True nếu có bị chiếu và False nếu không
-        in_check = self.is_in_check(self.game.turn.color)
-
-        # Hoàn tác di chuyển
-        self.board_array[origin_row][origin_col] = piece
-        self.board_array[to_row][to_col] = captured_piece
-        piece.x, piece.y = origin_row, origin_col
-
-        # trả về not... vì như chú thích ở trên, khi trả về False nghĩa là không bị chiếu
-        # nên đảo ngược lại thành True từ hàm is_legal_move là nước đi có hợp lệ
-        return not in_check
-
     
     def highlight_possible_move(self, piece: Piece):
         for row in range(10):
@@ -470,7 +484,6 @@ class BoardGame:
                 if piece.is_valid_move(row, col, self):
                     # kiểm tra tính hợp lệ của nước đi đó
                     if self.is_legal_move(piece, row, col):
-                        print(self.is_legal_move(piece, row, col))
                         target = self.get_piece(row, col)
                         if target and target.player.color != piece.player.color:
                             self.draw_piece(target, True)
@@ -528,6 +541,9 @@ class BoardGame:
                     if moved:
                         self.game.switch_turn()
                         self.selected_piece = None
+                    elif (row, col) != (self.selected_piece.x, self.selected_piece.y):
+                        self.illegal.play()
+        
         self.drag_offset = (0, 0)
         self.dragging_piece = None
 
@@ -548,6 +564,7 @@ class BoardGame:
         # mặc định bên đỏ đi trước(mấy thuộc tính này nằm bên game)
         self.game.turn = self.game.player1
         self.game.gameover = False
+        self.start_sound.play()
 
     def flip_board(self):
         self.is_flip = False if self.is_flip else True

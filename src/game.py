@@ -45,18 +45,15 @@ class Game:
     def switch_turn(self):
         self.turn = self.player1 if self.turn == self.player2 else self.player2
 
-        print(self.turn.color)
         # if self.board.is_in_check(self.turn.color):
         if self.board.is_in_check(self.player1.color):
-            print(f"{self.player1.color} đang bị chiếu!")
             if self.board.is_checkmate(self.turn):
-                print(f"{self.player1.color} bị chiếu bí!")
                 self.gameover = True
+                self.board.end_sound.play()
         elif self.board.is_in_check(self.player2.color):
-            print(f"{self.player2.color} đang bị chiếu!")
             if self.board.is_checkmate(self.turn):
-                print(f"{self.player2.color} bị chiếu bí!")
                 self.gameover = True
+                self.board.end_sound.play()
                 
 
     def get_opponent(self):

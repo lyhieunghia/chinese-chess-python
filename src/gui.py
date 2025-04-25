@@ -17,6 +17,7 @@ class Button:
         self.callback = callback
         self.font = pygame.font.SysFont(None, 28)
 
+        
     def draw(self, surface):
         # Vẽ màu nền của nút, có bo góc 6px
         pygame.draw.rect(surface, self.color, self.rect, border_radius=6)
@@ -101,6 +102,7 @@ def show_gameover(screen, winner_color, reset_callback):
 
 # hàm để show menu 
 def show_main_menu(screen):
+
     # font dùng cho tiêu đề 
     font = pygame.font.SysFont(None, 64)
     # font dùng cho chữ trên các nút
@@ -168,10 +170,11 @@ def show_main_menu(screen):
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if play_rect.collidepoint(event.pos):
+                    pygame.mixer.Sound("./assets/sounds/game_start.mp3").play()
                     return  # kết thúc menu và vào game
                 elif quit_rect.collidepoint(event.pos):
                     pygame.quit()
                     sys.exit()
 
-        # cái này giống như là để giới hạn tần suất làm mới khung hình?
+        # framerate 60
         clock.tick(60)
