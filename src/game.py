@@ -59,7 +59,7 @@ class Game:
         # các nút bên side bar
         self.buttons = [
             # tạm thời đặt text tiếng anh
-            Button(self.board_width + 20, 100, 160, 40, "Reset", self.reset_game),
+            Button(self.board_width + 20, 100, 160, 40, "Reset", self.board.reset_game),
             Button(self.board_width + 20, 160, 160, 40, "Flip Board", self.board.flip_board)
         ]
 
@@ -69,17 +69,16 @@ class Game:
         self.sidebar_image = pygame.transform.scale(self.sidebar_image, 
                                                     (self.sidebar_width, self.height))
 
-    def reset_game(self):
-        # đặt lại bàn cờ
-        self.board.reset_game()
-        # mặc định bên đỏ đi trước
-        self.turn = self.player1
-        self.gameover = False
-
     def switch_turn(self):
         self.turn = self.player1 if self.turn == self.player2 else self.player2
-        if self.board.is_checkmate(self.turn):
-            self.gameover = True
+
+        print(self.turn.color)
+        if self.board.is_in_check(self.turn.color):
+            print(f"{self.turn.color} đang bị chiếu!")
+            if self.board.is_checkmate(self.turn):
+                print(f"{self.turn.color} bị chiếu bí!")
+                self.gameover = True
+
 
     def get_opponent(self):
         return self.player1 if self.turn == self.player2 else self.player2
