@@ -240,7 +240,14 @@ class BoardGame:
 
         # lấy danh sách quân cờ của bên đối thủ
         # trả về danh sách đen nếu bên kiểm tra là đỏ và ngược lại
-        opponent_pieces = self.black_pieces if color == 'red' else self.red_pieces
+        opponent_color = 'black' if color == 'red' else 'red'
+        opponent_pieces = []
+        for row in range(9):
+            for col in range(10):
+                piece = self.get_piece(row, col)
+                if piece and piece.player.color == opponent_color:
+                    opponent_pieces.append(piece)
+                
 
         # chạy danh sách và kiểm tra nếu có quân đối thủ chiếu được
         for piece in opponent_pieces:
@@ -423,8 +430,6 @@ class BoardGame:
                     and piece.player == self.game.turn
                     and self.is_in_check(piece.player.color)
                     )
-                    if is_check:
-                        self.check_sound.play()
                     self.draw_piece(piece, False, is_check)
 
 
@@ -541,6 +546,9 @@ class BoardGame:
                     if moved:
                         self.game.switch_turn()
                         self.selected_piece = None
+
+                        if self.is_in_check(self.find_general(self.game.get_opponent().color)):
+                            self.check_sound.play()
                     elif (row, col) != (self.selected_piece.x, self.selected_piece.y):
                         self.illegal.play()
         
