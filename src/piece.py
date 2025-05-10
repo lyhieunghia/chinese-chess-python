@@ -103,24 +103,24 @@ class General(Piece):
         delta_y = abs(final_y - self.y)
 
         # Kiểm tra đi chéo nếu ở trung tâm cung
-        center_x = 1 if self.player.color == self.RED else 8
-        center_y = 4
+        # center_x = 1 if self.player.color == self.RED else 8
+        # center_y = 4
 
         # kiểm tra xem điểm đích có quân cờ không
         target_piece = board.get_piece(final_x, final_y)
         
-        # tướng sẽ có thêm khả năng đi chéo khi ở trung tâm
-        # nếu tướng đỏ hoặc đen ở trung tâm
-        if(self.x == center_x and self.y == center_y):
-           # kiểm tra xem nếu delta_x/y == 1
-            if(delta_x == 1 and delta_y == 1):
-                # nếu mà điểm đích có tồn tại quân cờ
-                if target_piece:
-                # nếu quân đó khác màu thì True ngược lại thì False
-                    return target_piece.player.color != self.player.color
-                # nếu không tồn tại
-                else:
-                    return True
+        # # tướng sẽ có thêm khả năng đi chéo khi ở trung tâm
+        # # nếu tướng đỏ hoặc đen ở trung tâm
+        # if(self.x == center_x and self.y == center_y):
+        #    # kiểm tra xem nếu delta_x/y == 1
+        #     if(delta_x == 1 and delta_y == 1):
+        #         # nếu mà điểm đích có tồn tại quân cờ
+        #         if target_piece:
+        #         # nếu quân đó khác màu thì True ngược lại thì False
+        #             return target_piece.player.color != self.player.color
+        #         # nếu không tồn tại
+        #         else:
+        #             return True
             # không đặt dòng này vì tướng vẫn có thể đi thẳng, dọc khi đứng ở trung tâm
             # và để cho xét tiếp điều kiên if() ở dưới
             # nếu sai giá trị delta
